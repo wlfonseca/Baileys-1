@@ -4981,9 +4981,9 @@ levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-"libsignal@git+https://github.com/whiskeysockets/libsignal-node.git#5002606a7f0ca5c6d1a9d457f11d9e81f919e2fb":
+"libsignal@git+https://github.com/whiskeysockets/libsignal-node.git#4d08331a833727c338c1a90041d17b870210dfae":
   version "2.0.1"
-  resolved "git+ssh://git@github.com/whiskeysockets/libsignal-node.git#5002606a7f0ca5c6d1a9d457f11d9e81f919e2fb"
+  resolved "git+ssh://git@github.com/whiskeysockets/libsignal-node.git#4d08331a833727c338c1a90041d17b870210dfae"
   integrity sha512-57EeXDBOUoAtLSvI3txXasPALCsvf2oVanMpTqx72DU6aCN/FgprACO9M21VI8PvJvTMdA52wnIh8KcwFvOQtQ==
   dependencies:
     curve25519-js "^0.0.4"
