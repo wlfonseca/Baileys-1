@@ -12,6 +12,7 @@ import {
 	KEY_BUNDLE_TYPE,
 	WA_ADV_ACCOUNT_SIG_PREFIX,
 	WA_ADV_DEVICE_SIG_PREFIX,
+	
 	WA_ADV_HOSTED_ACCOUNT_SIG_PREFIX
   } from "../Defaults";
 
@@ -170,9 +171,16 @@ export const configureSuccessfulPairing = (
 	const jid = deviceNode.attrs.jid
 
 	const isHostedAccount = accountType !== undefined && accountType === proto.ADVEncryptionType.HOSTED
+	
+	const hmacPrefix =
+    accountType === proto.ADVEncryptionType.HOSTED
+      ? WA_ADV_HOSTED_ACCOUNT_SIG_PREFIX
+      : Buffer.from([]);
 
-	const hmacPrefix = isHostedAccount ? Buffer.from([6, 5]) : Buffer.alloc(0)
-	const advSign = hmacSign(Buffer.concat([hmacPrefix, details!]), Buffer.from(advSecretKey, 'base64'))
+	  const advSign = hmacSign(
+		Buffer.concat([hmacPrefix, details!]),
+		Buffer.from(advSecretKey, "base64")
+	  );
 	
 	if (Buffer.compare(hmac!, advSign) !== 0) {
 		throw new Boom('Invalid account signature')
@@ -180,13 +188,13 @@ export const configureSuccessfulPairing = (
 
 	
 	const account = proto.ADVSignedDeviceIdentity.decode(details!)
-	const deviceIdentity = proto.ADVDeviceIdentity.decode(account.details!)
 	const { accountSignatureKey, accountSignature, details: deviceDetails } = account
-	
+
+	const deviceIdentity = proto.ADVDeviceIdentity.decode(deviceDetails!);
 	
 
-	const devicePrefix = isHostedAccount ? Buffer.from([6, 6]) : Buffer.from([6, 1])
-	//const deviceMsg = Buffer.concat([devicePrefix, deviceDetails!, signedIdentityKey.public, accountSignatureKey!])
+	//const devicePrefix = isHostedAccount ? Buffer.from([6, 6]) : Buffer.from([6, 1])
+	
 	const deviceMsg = Buffer.concat([
 		WA_ADV_DEVICE_SIG_PREFIX,
 		deviceDetails!,
@@ -195,7 +203,7 @@ export const configureSuccessfulPairing = (
 	  ]);
 	account.deviceSignature = Curve.sign(signedIdentityKey.private, deviceMsg)
 
-	const identity = createSignalIdentity(jid!, accountSignatureKey!)
+	const identity = createSignalIdentity(lid!, accountSignatureKey!)
 	const accountEnc = encodeSignedDeviceIdentity(account, false)
 
 	
