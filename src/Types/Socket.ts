@@ -158,6 +158,12 @@ export type SocketConfig = {
 	 */
 	antesDeConfirmarMensagem?: (msg: WAMessage, type: MessageUpsertType) => Promise<void> | void
 
+	/**
+	 * chamado quando a sincronização do app state para por falta de chave,
+	 * para o chamador pedir a chave ao celular. Erro na função é só registrado.
+	 */
+	aoFaltarChaveDoAppState?: (collection: string, error: unknown) => void
+
 	makeSignalRepository: (
 		auth: SignalAuthState,
 		logger: ILogger,

@@ -705,6 +705,15 @@ export const makeChatsSocket = (config: SocketConfig) => {
 								error: error.stack
 							}
 
+							// avisa o chamador a cada falta de chave, para pedir a chave ao celular como o WhatsApp Web
+							if (isMissingKeyError(error) && config.aoFaltarChaveDoAppState) {
+								try {
+									config.aoFaltarChaveDoAppState(name, error)
+								} catch (err) {
+									logger.warn({ err }, 'aoFaltarChaveDoAppState falhou')
+								}
+							}
+
 							if (isMissingKeyError(error) && attemptsMap[name] >= MAX_SYNC_ATTEMPTS) {
 								// WA Web treats missing keys as "Blocked" — park the collection
 								// until the key arrives via APP_STATE_SYNC_KEY_SHARE.
