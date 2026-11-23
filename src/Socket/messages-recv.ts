@@ -1726,7 +1726,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 								}
 
 								const encNode = getBinaryNodeChild(node, 'enc')
-								await sendRetryRequest(node, !encNode)
+								await sendRetryRequest(node, !encNode, msg.messageStubParameters?.[0])
 								if (retryRequestDelayMs) {
 									await delay(retryRequestDelayMs)
 								}
@@ -1734,8 +1734,8 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 								logger.error({ err }, 'Failed to send retry')
 							}
 
+							// o WhatsApp Web só manda o recibo de retry, sem ack nem nack
 							acked = true
-							await sendMessageAck(node, NACK_REASONS.UnhandledError)
 						})
 					}
 				} else {
