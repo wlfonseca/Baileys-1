@@ -58,7 +58,7 @@ import {
 	S_WHATSAPP_NET
 } from '../WABinary'
 import { BinaryInfo } from '../WAM/BinaryInfo.js'
-import { USyncQuery, USyncUser } from '../WAUSync/'
+import { USyncBackoff, type USyncQueryError, USyncQuery, USyncUser } from '../WAUSync/'
 import { WebSocketClient } from './Client'
 import { executeWMexQuery } from './mex.js'
 
@@ -267,10 +267,14 @@ export const makeSocket = (config: SocketConfig) => {
 		ev.emit('creds.update', { signedPreKey: skey })
 	}
 
+	const usyncBackoff = new USyncBackoff()
+
 	const executeUSyncQuery = async (usyncQuery: USyncQuery) => {
 		if (usyncQuery.protocols.length === 0) {
 			throw new Boom('USyncQuery must have at least one protocol')
 		}
+
+		await usyncBackoff.waitForBackoff(usyncQuery)
 
 		// todo: validate users, throw WARNING on no valid users
 		// variable below has only validated users
@@ -321,7 +325,13 @@ export const makeSocket = (config: SocketConfig) => {
 
 		const result = await query(iq)
 
-		return usyncQuery.parseUSyncQueryResult(result)
+		const parsed = usyncQuery.parseUSyncQueryResult(result)
+		if (parsed && Object.keys(parsed.errors).length) {
+			logger.warn({ errors: parsed.errors, context: usyncQuery.context }, 'usync protocol error')
+			usyncBackoff.applyResultErrors(parsed.errors)
+		}
+
+		return parsed
 	}
 
 	const onWhatsApp = async (...phoneNumber: string[]) => {
@@ -351,6 +361,39 @@ export const makeSocket = (config: SocketConfig) => {
 
 		if (results) {
 			return results.list.filter(a => !!a.contact).map(({ contact, id }) => ({ jid: id, exists: contact as boolean }))
+		}
+	}
+
+	/**
+	 * Como o onWhatsApp, mas com o contexto do usync (`background` para verificação em
+	 * lote, que obedece a pausa pedida pelo servidor) e devolvendo o erro do protocolo
+	 * contact: sem ele, consulta recusada pelo servidor parecia número sem WhatsApp.
+	 */
+	const queryOnWhatsApp = async (
+		context: string,
+		...phoneNumber: string[]
+	): Promise<{ list: { jid: string; exists: boolean }[]; error?: USyncQueryError; backoffMs: number }> => {
+		const usyncQuery = new USyncQuery().withContactProtocol().withContext(context)
+		for (const jid of phoneNumber) {
+			if (isLidUser(jid)) {
+				logger?.warn('LIDs are not supported with queryOnWhatsApp')
+				continue
+			}
+
+			usyncQuery.withUser(new USyncUser().withPhone(`+${jid.replace('+', '').split('@')[0]?.split(':')[0]}`))
+		}
+
+		if (usyncQuery.users.length === 0) {
+			return { list: [], backoffMs: usyncBackoff.remainingMs('contact') }
+		}
+
+		const results = await executeUSyncQuery(usyncQuery)
+		return {
+			list: (results?.list || [])
+				.filter(a => !!a.contact)
+				.map(({ contact, id }) => ({ jid: id, exists: contact as boolean })),
+			error: results?.errors.contact,
+			backoffMs: usyncBackoff.remainingMs('contact')
 		}
 	}
 
@@ -1183,6 +1226,7 @@ export const makeSocket = (config: SocketConfig) => {
 		waitForConnectionUpdate: bindWaitForConnectionUpdate(ev),
 		sendWAMBuffer,
 		executeUSyncQuery,
+		queryOnWhatsApp,
 		onWhatsApp,
 		fetchAccountReachoutTimelock,
 		fetchNewChatMessageCap

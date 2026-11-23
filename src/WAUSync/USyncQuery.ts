@@ -13,9 +13,13 @@ import { USyncUser } from './USyncUser'
 
 export type USyncQueryResultList = { [protocol: string]: unknown; id: string }
 
+export type USyncQueryError = { code: number; text: string; backoff?: number }
+
 export type USyncQueryResult = {
 	list: USyncQueryResultList[]
 	sideList: USyncQueryResultList[]
+	/** erro de cada protocolo em `usync > result > <protocolo> > error`; `backoff` em segundos */
+	errors: { [protocol: string]: USyncQueryError }
 }
 
 export class USyncQuery {
@@ -58,16 +62,29 @@ export class USyncQuery {
 		)
 
 		const queryResult: USyncQueryResult = {
-			// TODO: implement errors etc.
 			list: [],
-			sideList: []
+			sideList: [],
+			errors: {}
 		}
 
 		const usyncNode = getBinaryNodeChild(result, 'usync')
 
-		//TODO: implement error backoff, refresh etc.
-		//TODO: see if there are any errors in the result node
-		//const resultNode = getBinaryNodeChild(usyncNode, 'result')
+		const resultNode = usyncNode ? getBinaryNodeChild(usyncNode, 'result') : undefined
+		if (Array.isArray(resultNode?.content)) {
+			for (const protocolNode of resultNode.content) {
+				const errorNode = getBinaryNodeChild(protocolNode, 'error')
+				if (!errorNode) {
+					continue
+				}
+
+				const backoff = parseInt(String(errorNode.attrs.backoff), 10)
+				queryResult.errors[protocolNode.tag] = {
+					code: Number(errorNode.attrs.code) || 0,
+					text: String(errorNode.attrs.text || ''),
+					backoff: Number.isFinite(backoff) ? backoff : undefined
+				}
+			}
+		}
 
 		const listNode = usyncNode ? getBinaryNodeChild(usyncNode, 'list') : undefined
 
