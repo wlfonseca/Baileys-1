@@ -1345,16 +1345,19 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				const fullMsg = await generateWAMessage(jid, content, {
 					logger,
 					userJid,
+					// a prévia pode vir do chamador (limite de tamanho, só endereço público)
 					getUrlInfo: text =>
-						getUrlInfo(text, {
-							thumbnailWidth: linkPreviewImageThumbnailWidth,
-							fetchOpts: {
-								timeout: 3_000,
-								...(httpRequestOptions || {})
-							},
-							logger,
-							uploadImage: generateHighQualityLinkPreview ? waUploadToServer : undefined
-						}),
+						typeof config.linkPreviewHook === 'function'
+							? config.linkPreviewHook(text)
+							: getUrlInfo(text, {
+									thumbnailWidth: linkPreviewImageThumbnailWidth,
+									fetchOpts: {
+										timeout: 3_000,
+										...(httpRequestOptions || {})
+									},
+									logger,
+									uploadImage: generateHighQualityLinkPreview ? waUploadToServer : undefined
+								}),
 					//TODO: CACHE
 					getProfilePicUrl: sock.profilePictureUrl,
 					getCallLink: sock.createCallLink,

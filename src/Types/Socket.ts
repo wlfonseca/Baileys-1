@@ -4,7 +4,7 @@ import { proto } from '../../WAProto/index.js'
 import type { ILogger } from '../Utils/logger'
 import type { AuthenticationState, LIDMapping, SignalAuthState, TransactionCapabilityOptions } from './Auth'
 import type { GroupMetadata } from './GroupMetadata'
-import { type MediaConnInfo, type MessageUpsertType, type WAMessage, type WAMessageKey } from './Message'
+import { type MediaConnInfo, type MessageUpsertType, type WAMessage, type WAUrlInfo, type WAMessageKey } from './Message'
 import type { SignalRepositoryWithLIDStore } from './Signal'
 
 export type WAVersion = [number, number, number]
@@ -163,6 +163,12 @@ export type SocketConfig = {
 	 * para o chamador pedir a chave ao celular. Erro na função é só registrado.
 	 */
 	aoFaltarChaveDoAppState?: (collection: string, error: unknown) => void
+
+	/**
+	 * gera a prévia (cartão) do link das mensagens enviadas no lugar do link-preview-js,
+	 * que lê a página inteira; permite ao chamador limitar tamanho e aceitar só endereço público
+	 */
+	linkPreviewHook?: (text: string) => Promise<WAUrlInfo | undefined>
 
 	makeSignalRepository: (
 		auth: SignalAuthState,
