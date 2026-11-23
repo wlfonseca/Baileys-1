@@ -1873,6 +1873,10 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 					'error 463: account restricted or missing tctoken for contact'
 				)
 
+				// o 463 também é o motivo do bloqueio de novas conversas (reachout timelock):
+				// consulta o bloqueio, que o ramo isReachoutTimelocked abaixo nunca alcançava
+				fetchAccountReachoutTimelock().catch(err => logger.warn({ err }, 'failed to fetch reachout timelock after 463'))
+
 				const ackFrom = attrs.from
 				if (ackFrom && !inFlight463Recoveries.has(ackFrom)) {
 					inFlight463Recoveries.add(ackFrom)
