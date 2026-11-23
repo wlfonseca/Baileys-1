@@ -145,6 +145,12 @@ export type SocketConfig = {
 	/** cached group metadata, use to prevent redundant requests to WA & speed up msg sending */
 	cachedGroupMetadata: (jid: string) => Promise<GroupMetadata | undefined>
 
+	/**
+	 * campos acrescentados ao ClientPayload de login (generateLoginNode),
+	 * por exemplo para logar como o WhatsApp Web oficial
+	 */
+	loginPayloadExtra?: () => proto.IClientPayload | undefined
+
 	makeSignalRepository: (
 		auth: SignalAuthState,
 		logger: ILogger,

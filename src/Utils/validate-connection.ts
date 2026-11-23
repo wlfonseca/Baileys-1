@@ -80,7 +80,9 @@ export const generateLoginNode = (userJid: string, config: SocketConfig): proto.
 		username: +user,
 		device: device,
 		// TODO: investigate (hard set as false atm)
-		lidDbMigrated: false
+		lidDbMigrated: false,
+		// campos extras do ClientPayload de login definidos pelo chamador
+		...(typeof config.loginPayloadExtra === 'function' ? config.loginPayloadExtra() || {} : {})
 	}
 	return proto.ClientPayload.fromObject(payload)
 }
