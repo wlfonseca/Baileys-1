@@ -4,7 +4,7 @@ import { proto } from '../../WAProto/index.js'
 import type { ILogger } from '../Utils/logger'
 import type { AuthenticationState, LIDMapping, SignalAuthState, TransactionCapabilityOptions } from './Auth'
 import type { GroupMetadata } from './GroupMetadata'
-import { type MediaConnInfo, type WAMessageKey } from './Message'
+import { type MediaConnInfo, type MessageUpsertType, type WAMessage, type WAMessageKey } from './Message'
 import type { SignalRepositoryWithLIDStore } from './Signal'
 
 export type WAVersion = [number, number, number]
@@ -150,6 +150,13 @@ export type SocketConfig = {
 	 * por exemplo para logar como o WhatsApp Web oficial
 	 */
 	loginPayloadExtra?: () => proto.IClientPayload | undefined
+
+	/**
+	 * chamado com a mensagem decriptada antes de o recibo ir ao servidor (como o WhatsApp Web),
+	 * para o chamador gravá-la: depois do recibo o servidor não reentrega.
+	 * Erro na função é registrado e o recibo segue assim mesmo.
+	 */
+	antesDeConfirmarMensagem?: (msg: WAMessage, type: MessageUpsertType) => Promise<void> | void
 
 	makeSignalRepository: (
 		auth: SignalAuthState,

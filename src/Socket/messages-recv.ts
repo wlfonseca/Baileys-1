@@ -1735,6 +1735,15 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 						messageRetryManager.cancelPendingPhoneRequest(msg.key.id)
 					}
 
+					// grava a mensagem antes do recibo: depois dele o servidor não reentrega
+					if (config.antesDeConfirmarMensagem) {
+						try {
+							await config.antesDeConfirmarMensagem(msg, node.attrs.offline ? 'append' : 'notify')
+						} catch (err) {
+							logger.warn({ err, msgId: msg.key.id }, 'antesDeConfirmarMensagem falhou; confirmando assim mesmo')
+						}
+					}
+
 					const isNewsletter = isJidNewsletter(msg.key.remoteJid!)
 					if (!isNewsletter) {
 						// no type in the receipt => message delivered
