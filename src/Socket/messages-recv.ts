@@ -571,7 +571,16 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		await query(stanza)
 	}
 
-	const sendRetryRequest = async (node: BinaryNode, forceIncludeKeys = false) => {
+	// motivo do recibo de retry, como o WAWebSendRetryReceiptJob (1 = sem sessão ou chave do remetente)
+	const getRetryReason = (error: unknown) => {
+		const m = String(error || '')
+		if (/No session|No SenderKey|No sessions|No matching sessions/i.test(m)) return 1
+		if (/Invalid PreKey|invalid key/i.test(m)) return 2
+		if (/Bad MAC/i.test(m)) return 7
+		return 0
+	}
+
+	const sendRetryRequest = async (node: BinaryNode, forceIncludeKeys = false, decryptionError?: string) => {
 		const { fullMessage } = decodeMessageNode(node, authState.creds.me!.id, authState.creds.me!.lid || '')
 		const { key: msgKey } = fullMessage
 		const msgId = msgKey.id!
@@ -672,8 +681,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 							id: node.attrs.id!,
 							t: node.attrs.t!,
 							v: '1',
-							// ADD ERROR FIELD
-							error: '0'
+							error: String(getRetryReason(decryptionError))
 						}
 					},
 					{
