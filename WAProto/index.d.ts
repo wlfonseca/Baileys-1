@@ -5278,6 +5278,7 @@ export namespace proto {
         pollCreationMessageV5?: (proto.Message.IPollCreationMessage|null);
         newsletterFollowerInviteMessageV2?: (proto.Message.INewsletterFollowerInviteMessage|null);
         pollResultSnapshotMessageV3?: (proto.Message.IPollResultSnapshotMessage|null);
+        audioStickerMessage?: (proto.Message.IFutureProofMessage|null);
     }
 
     class Message implements IMessage {
@@ -5377,6 +5378,7 @@ export namespace proto {
         public pollCreationMessageV5?: (proto.Message.IPollCreationMessage|null);
         public newsletterFollowerInviteMessageV2?: (proto.Message.INewsletterFollowerInviteMessage|null);
         public pollResultSnapshotMessageV3?: (proto.Message.IPollResultSnapshotMessage|null);
+        public audioStickerMessage?: (proto.Message.IFutureProofMessage|null);
         public static create(properties?: proto.IMessage): proto.Message;
         public static encode(m: proto.IMessage, w?: $protobuf.Writer): $protobuf.Writer;
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message;
@@ -9008,6 +9010,9 @@ export namespace proto {
             isLottie?: (boolean|null);
             accessibilityLabel?: (string|null);
             mediaKeyDomain?: (proto.Message.MediaKeyDomain|null);
+            premium?: (number|null);
+            emojis?: (string|null);
+            audioMessage?: (proto.Message.IAudioMessage|null);
         }
 
         class StickerMessage implements IStickerMessage {
@@ -9033,6 +9038,10 @@ export namespace proto {
             public isLottie?: (boolean|null);
             public accessibilityLabel?: (string|null);
             public mediaKeyDomain?: (proto.Message.MediaKeyDomain|null);
+            public premium?: (number|null);
+            public emojis?: (string|null);
+            public audioMessage?: (proto.Message.IAudioMessage|null);
+            public audio?: "audioMessage";
             public static create(properties?: proto.Message.IStickerMessage): proto.Message.StickerMessage;
             public static encode(m: proto.Message.IStickerMessage, w?: $protobuf.Writer): $protobuf.Writer;
             public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.StickerMessage;
